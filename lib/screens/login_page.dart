@@ -18,6 +18,8 @@ class _LoginPageState extends State<LoginPage> {
   bool _isPasswordVisible = false;
 
   void _login() async {
+    // Hides keyboard on login attempt
+    FocusScope.of(context).unfocus();
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -39,131 +41,129 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _signInWithGoogle() async {
+    FocusScope.of(context).unfocus();
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
     try {
-      final user = await _authService.signInWithGoogle();
-      if (!mounted) return;
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      if (user == null) {
-        // This case now specifically means the user canceled the sign-in picker.
-        setState(() {
-          _errorMessage = 'Google Sign-In was canceled.';
-        });
-      }
-      // Successful sign-in will be handled by the AuthWrapper stream.
+      await _authService.signInWithGoogle();
+      // AuthWrapper will handle navigation on success
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _isLoading = false;
-        _errorMessage = e.toString(); // Display the error as a string.
+        _errorMessage = 'An error occurred with Google Sign-In.';
       });
+    } finally {
+       if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(
-        0xFFFAF9EE,
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Spacer(flex: 1),
-              const Text(
-                "Welcome back! Go with your Tasks!",
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              const SizedBox(height: 40),
-              _buildTextField(
-                controller: _emailController,
-                hintText: 'Enter your email',
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _passwordController,
-                hintText: 'Enter your password',
-                obscureText: !_isPasswordVisible,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _isPasswordVisible
-                        ? Icons.visibility
-                        : Icons.visibility_off,
-                    color: Colors.grey,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _isPasswordVisible = !_isPasswordVisible;
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    // TODO: Implement Forgot Password functionality
-                  },
-                  child: const Text(
-                    'Forgot Password?',
-                    style: TextStyle(color: Colors.black),
+      backgroundColor: const Color(0xFFF7F8F9),
+      // The body is now wrapped in a SingleChildScrollView to prevent overflow
+      body: SingleChildScrollView(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Replaced Spacers with SizedBoxes for a scrollable layout
+                SizedBox(height: MediaQuery.of(context).size.height * 0.1),
+                const Text(
+                  "Welcome back! Go with your Tasks!",
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              if (_errorMessage != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: Text(
-                    _errorMessage!,
-                    style: const TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
+                const SizedBox(height: 40),
+                _buildTextField(
+                  controller: _emailController,
+                  hintText: 'Enter your email',
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _passwordController,
+                  hintText: 'Enter your password',
+                  obscureText: !_isPasswordVisible,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: Colors.grey,
                     ),
-                    textAlign: TextAlign.center,
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
                   ),
                 ),
-              if (_isLoading)
-                const Center(child: CircularProgressIndicator())
-              else
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _login,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF212121),
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      // TODO: Implement Forgot Password functionality
+                    },
+                    child: const Text(
+                      'Forgot Password?',
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                if (_errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Center(
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                    child: const Text(
-                      'Login',
-                      style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                if (_isLoading)
+                  const Center(child: CircularProgressIndicator())
+                else
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF212121),
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Login',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
                     ),
                   ),
-                ),
-              const Spacer(flex: 2),
-              _buildSocialLoginSection(),
-              const Spacer(flex: 1),
-              _buildBottomNavigation(context),
-              const SizedBox(height: 16),
-            ],
+                const SizedBox(height: 30),
+                _buildSocialLoginSection(),
+                const SizedBox(height: 30),
+                _buildBottomNavigation(context),
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),
@@ -217,7 +217,7 @@ class _LoginPageState extends State<LoginPage> {
           width: double.infinity,
           child: ElevatedButton.icon(
             onPressed: _isLoading ? null : _signInWithGoogle,
-            icon: Image.asset('assets/images/google_signlogo.png', height: 22.0), // Assuming the logo is in assets/images
+            icon: Image.asset('assets/images/google_signlogo.png', height: 22.0),
             label: const Text('Sign in with Google'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
