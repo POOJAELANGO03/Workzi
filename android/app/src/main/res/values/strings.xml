@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Notification channel for task reminders -->
+    <string name="task_notification_channel_id">task_channel</string>
+    <string name="task_notification_channel_name">Task Reminders</string>
+    <string name="task_notification_channel_description">Notifications for task reminders</string>
+</resources>

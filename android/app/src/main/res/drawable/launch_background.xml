@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified to customize the launch splash screen for speechtotext app -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background color matching the app's light theme -->
+    <item android:drawable="@android:color/white" />
+
+    <!-- Custom splash image centered on the screen -->
+    <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@mipmap/ic_launcher" />
+    </item>
+</layer-list>
