@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:speechtotext/screens/auth_service.dart';
 import 'package:speechtotext/screens/task_list_page.dart';
-import 'package:speechtotext/screens/speech_to_text.dart';
 
 class StatusCardInfo {
   final String title;
@@ -52,9 +51,7 @@ class _HomePageState extends State<HomePage> {
         counts[status] = counts[status]! + 1;
       }
     }
-
     counts['Deleted'] = deletedTasksSnapshot.docs.length;
-
     return counts;
   }
 
@@ -63,29 +60,20 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const TaskFormPage()),
-              ).then((_) => setState(() {}));
-            },
-          ),
-        ],
+        actions: const [],
       ),
       body: RefreshIndicator(
         onRefresh: () async => setState(() {}),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 10),
-              const Text('Task Status',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              Text(
+                'Task Status',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 16),
               FutureBuilder<Map<String, int>>(
                 future: _fetchTaskCounts(),
@@ -93,10 +81,10 @@ class _HomePageState extends State<HomePage> {
                   final Map<String, int>? counts = snapshot.data;
 
                   final cardData = [
-                    StatusCardInfo(title: 'To Do', icon: Icons.pending_actions, color: const Color(0xFF8BA9D8), count: counts?['To Do']),
-                    StatusCardInfo(title: 'In Progress', icon: Icons.sync, color: const Color(0xFF8A7B94), count: counts?['In Progress']),
-                    StatusCardInfo(title: 'Done', icon: Icons.check_circle, color: const Color(0xFF99B89A), count: counts?['Done']),
-                    StatusCardInfo(title: 'Deleted', icon: Icons.delete_forever, color: const Color(0xFFD48E8E), count: counts?['Deleted'], isArchived: true),
+                    StatusCardInfo(title: 'To Do', icon: Icons.pending_actions_rounded, color: Colors.orange, count: counts?['To Do']),
+                    StatusCardInfo(title: 'In Progress', icon: Icons.sync_rounded, color: Colors.blue, count: counts?['In Progress']),
+                    StatusCardInfo(title: 'Done', icon: Icons.check_circle_rounded, color: Colors.green, count: counts?['Done']),
+                    StatusCardInfo(title: 'Deleted', icon: Icons.delete_forever_rounded, color: Colors.red, count: counts?['Deleted'], isArchived: true),
                   ];
 
                   return GridView.builder(
@@ -107,19 +95,19 @@ class _HomePageState extends State<HomePage> {
                       crossAxisCount: 2,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
-                      childAspectRatio: 1.8,
+                      childAspectRatio: 2.5,
                     ),
                     itemBuilder: (context, index) {
-                      return InteractiveStatusCard(
+                      return StatusCard(
                         cardInfo: cardData[index],
                         onTap: () {
                           if (counts != null) {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
+                                // MODIFIED: Removed the 'color' parameter
                                 builder: (context) => TaskListPage(
                                   status: cardData[index].title,
-                                  color: cardData[index].color,
                                   isArchived: cardData[index].isArchived,
                                 ),
                               ),
@@ -139,86 +127,60 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class InteractiveStatusCard extends StatefulWidget {
+class StatusCard extends StatelessWidget {
   final StatusCardInfo cardInfo;
   final VoidCallback onTap;
 
-  const InteractiveStatusCard({
+  const StatusCard({
     Key? key,
     required this.cardInfo,
     required this.onTap,
   }) : super(key: key);
 
   @override
-  State<InteractiveStatusCard> createState() => _InteractiveStatusCardState();
-}
-
-class _InteractiveStatusCardState extends State<InteractiveStatusCard> {
-  bool _isPressed = false;
-
-  void _onPress(bool isPressed) {
-    setState(() {
-      _isPressed = isPressed;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final count = widget.cardInfo.count;
+    final count = cardInfo.count;
 
-    return GestureDetector(
-      onTapDown: (_) => _onPress(true),
-      onTapUp: (_) {
-        _onPress(false);
-        widget.onTap();
-      },
-      onTapCancel: () => _onPress(false),
-      child: AnimatedScale(
-        scale: _isPressed ? 0.95 : 1.0,
-        duration: const Duration(milliseconds: 150),
-        child: Container(
-          padding: const EdgeInsets.all(12.0),
-          decoration: BoxDecoration(
-            color: widget.cardInfo.color,
-            borderRadius: BorderRadius.circular(20.0),
-            boxShadow: [
-              BoxShadow(
-                color: widget.cardInfo.color.withOpacity(0.4),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(widget.cardInfo.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                  Icon(widget.cardInfo.icon, color: Colors.white.withOpacity(0.8), size: 22),
-                ],
-              ),
-              if (count != null)
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12.0),
+      child: Container(
+        padding: const EdgeInsets.all(12.0),
+        decoration: BoxDecoration(
+          color: cardInfo.color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12.0),
+          border: Border.all(color: cardInfo.color.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            Icon(cardInfo.icon, color: cardInfo.color, size: 28),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
                 Text(
-                  '$count Tasks',
-                  style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500),
-                )
-              else
-                SizedBox(
-                  height: 14,
-                  width: 14,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withOpacity(0.8)),
-                  ),
+                  cardInfo.title,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-            ],
-          ),
+                const SizedBox(height: 4),
+                if (count != null)
+                  Text(
+                    '$count Tasks',
+                    style: TextStyle(color: Colors.black.withOpacity(0.6), fontSize: 14),
+                  )
+                else
+                  SizedBox(
+                    height: 14,
+                    width: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(cardInfo.color.withOpacity(0.8)),
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ),
       ),
     );

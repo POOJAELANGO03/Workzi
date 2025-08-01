@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:speechtotext/screens/auth_service.dart';
 import 'package:speechtotext/screens/edit_profile_page.dart';
 
@@ -18,15 +17,12 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final user = _authService.currentUser;
+    final primaryColor = Theme.of(context).primaryColor;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      // MODIFIED: AppBar is now a standard AppBar
       appBar: AppBar(
-        // --- THIS IS THE FIX ---
-        // The "Profile" title has been added back.
         title: const Text('Profile'),
-        actions: [
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -38,12 +34,12 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 CircleAvatar(
                   radius: 50,
-                  backgroundColor: Colors.grey.shade300,
+                  backgroundColor: Colors.grey.shade200,
                   backgroundImage: user?.photoURL != null
                       ? NetworkImage(user!.photoURL!)
                       : null,
                   child: user?.photoURL == null
-                      ? const Icon(Icons.person, size: 50, color: Colors.white)
+                      ? Icon(Icons.person, size: 50, color: Colors.grey.shade400)
                       : null,
                 ),
                 Positioned(
@@ -51,7 +47,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   right: 0,
                   child: CircleAvatar(
                     radius: 18,
-                    backgroundColor: Colors.blueAccent,
+                    // MODIFIED: Edit button uses new theme color
+                    backgroundColor: primaryColor,
                     child: IconButton(
                       icon: const Icon(Icons.edit, color: Colors.white, size: 18),
                       onPressed: () async {
@@ -61,7 +58,6 @@ class _ProfilePageState extends State<ProfilePage> {
                             builder: (context) => const EditProfilePage(),
                           ),
                         );
-                        // Refresh the UI in case the name was changed
                         setState(() {});
                       },
                     ),
@@ -81,21 +77,18 @@ class _ProfilePageState extends State<ProfilePage> {
               user?.email ?? 'user.email@example.com',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey.shade600,
+                color: Colors.grey[600],
               ),
             ),
             const SizedBox(height: 8),
-            // --- Display User UID ---
             SelectableText(
               'UID: ${user?.uid ?? 'N/A'}',
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey.shade500,
+                color: Colors.grey[400],
               ),
             ),
             const SizedBox(height: 32),
-
-            // --- The Task Stats Card remains removed ---
 
             // --- Settings Options ---
             _buildSettingsTile(
@@ -123,23 +116,22 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 40),
 
-            // --- Sign Out Button ---
+            // MODIFIED: Sign Out Button is restyled
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: OutlinedButton(
                 onPressed: () async {
                   await _authService.signOut();
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black.withOpacity(0.1),
-                  foregroundColor: Colors.black,
-                  elevation: 0,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  side: BorderSide(color: Colors.red.shade200),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text('Sign Out'),
+                child: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               ),
             ),
             const SizedBox(height: 20),
@@ -149,7 +141,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Helper widget for the settings tiles
+  // MODIFIED: Settings tile restyled for the new theme
   Widget _buildSettingsTile({
     required IconData icon,
     required Color iconColor,
@@ -159,16 +151,17 @@ class _ProfilePageState extends State<ProfilePage> {
   }) {
     return Card(
       elevation: 0,
+      color: Colors.grey.shade100,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade200),
       ),
       child: ListTile(
         leading: Icon(icon, color: iconColor),
-        title: Text(title),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         trailing: Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: Colors.black,
         ),
       ),
     );

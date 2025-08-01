@@ -4,7 +4,6 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:googleapis/calendar/v3.dart' as calendar;
-import 'package:googleapis_auth/googleapis_auth.dart' as auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'auth_service.dart';
 import 'package:http/http.dart' as http;
@@ -232,7 +231,6 @@ class _CalendarPageState extends State<CalendarPage> {
         await FirebaseFirestore.instance.collection('Users_Deleted_Tasks').doc(taskId).set(doc.data()!);
         await taskRef.delete();
         _fetchAllEvents(); // Refresh calendar
-        // Notify HomePage to refresh deleted count (via setState in parent if possible)
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Task Deleted and Archived')));
         }
@@ -249,7 +247,7 @@ class _CalendarPageState extends State<CalendarPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(event.title),
+          title: Text(event.title, style: const TextStyle(fontWeight: FontWeight.bold)),
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
@@ -292,7 +290,7 @@ class _CalendarPageState extends State<CalendarPage> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: event.status == status ? Colors.blueAccent : Colors.grey.shade300,
+                        backgroundColor: event.status == status ? Theme.of(context).primaryColor : Colors.grey.shade300,
                         foregroundColor: event.status == status ? Colors.white : Colors.black,
                       ),
                       child: Text(status),
@@ -317,7 +315,8 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   List<TaskEvent> _getEventsForDay(DateTime day) {
-    return _events[day] ?? [];
+    final utcDay = DateTime.utc(day.year, day.month, day.day);
+    return _events[utcDay] ?? [];
   }
 
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
@@ -330,38 +329,13 @@ class _CalendarPageState extends State<CalendarPage> {
     }
   }
 
-  Color _getColorForPriority(String priority) {
-    switch (priority.toLowerCase()) {
-      case 'high':
-        return Colors.red.shade100;
-      case 'medium':
-        return Colors.blue.shade100;
-      case 'low':
-        return Colors.green.shade100;
-      default:
-        return Colors.grey.shade200;
-    }
-  }
-
-  Color _getIconColorForPriority(String priority) {
-    switch (priority.toLowerCase()) {
-      case 'high':
-        return Colors.red;
-      case 'medium':
-        return Colors.blue;
-      case 'low':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    // MODIFIED: Scaffold now uses the white background from the theme
     return Scaffold(
+      // MODIFIED: AppBar is now a standard AppBar and will be styled by the theme
       appBar: AppBar(
         title: const Text('Calendar'),
-        centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -376,8 +350,9 @@ class _CalendarPageState extends State<CalendarPage> {
           ? Center(child: Text(_errorMessage!))
           : Column(
         children: [
+          // MODIFIED: Calendar is restyled for the new theme
           TableCalendar<TaskEvent>(
-            firstDay: DateTime.now(),
+            firstDay: DateTime.utc(2020, 1, 1),
             lastDay: DateTime.utc(2030, 12, 31),
             focusedDay: _focusedDay,
             calendarFormat: _calendarFormat,
@@ -395,23 +370,30 @@ class _CalendarPageState extends State<CalendarPage> {
             onPageChanged: (focusedDay) {
               _focusedDay = focusedDay;
             },
-            calendarStyle: const CalendarStyle(
+            headerStyle: HeaderStyle(
+              titleTextStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              formatButtonTextStyle: TextStyle(color: Theme.of(context).primaryColor),
+              formatButtonDecoration: BoxDecoration(
+                border: Border.fromBorderSide(BorderSide(color: Colors.grey.shade300)),
+                borderRadius: const BorderRadius.all(Radius.circular(12.0)),
+              ),
+            ),
+            calendarStyle: CalendarStyle(
               todayDecoration: BoxDecoration(
-                color: Colors.blueAccent,
+                color: Colors.blue.shade100,
                 shape: BoxShape.circle,
               ),
               selectedDecoration: BoxDecoration(
-                color: Colors.orangeAccent,
+                color: Theme.of(context).primaryColor,
                 shape: BoxShape.circle,
               ),
-              disabledTextStyle: TextStyle(color: Colors.grey),
-              outsideDaysVisible: false,
+              markerDecoration: BoxDecoration(
+                color: Colors.orange.shade400,
+                shape: BoxShape.circle,
+              ),
             ),
-            enabledDayPredicate: (day) {
-              return !day.isBefore(DateTime.now());
-            },
           ),
-          const SizedBox(height: 8.0),
+          const Divider(),
           Expanded(
             child: ValueListenableBuilder<List<TaskEvent>>(
               valueListenable: _selectedEvents,
@@ -423,38 +405,25 @@ class _CalendarPageState extends State<CalendarPage> {
                   itemCount: value.length,
                   itemBuilder: (context, index) {
                     final event = value[index];
-                    final Color taskColor = event.isGoogleEvent
-                        ? Colors.blue.shade50
-                        : _getColorForPriority(event.priority);
-                    final Color iconColor = event.isGoogleEvent
-                        ? Colors.blueAccent
-                        : _getIconColorForPriority(event.priority);
-
-                    return Container(
+                    return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-                      decoration: BoxDecoration(
-                        color: taskColor,
-                        border: Border.all(color: taskColor.withOpacity(0.5)),
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      child: GestureDetector(
-                        onLongPress: () => _showTaskDetailsDialog(event),
-                        child: ListTile(
-                          title: Text(event.title),
-                          leading: Icon(
-                            event.isGoogleEvent ? Icons.calendar_month : Icons.check_circle,
-                            color: iconColor,
-                          ),
-                          trailing: !event.isGoogleEvent
-                              ? IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () async {
-                              await _deleteTask(event.id);
-                            },
-                          )
-                              : null,
+                      child: ListTile(
+                        onTap: () => _showTaskDetailsDialog(event),
+                        leading: Icon(
+                          event.isGoogleEvent ? Icons.calendar_month : Icons.check_circle_outline,
+                          color: Theme.of(context).primaryColor,
                         ),
+                        title: Text(event.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        trailing: !event.isGoogleEvent
+                            ? IconButton(
+                          icon: Icon(Icons.delete, color: Colors.grey.shade600),
+                          onPressed: () async {
+                            await _deleteTask(event.id);
+                          },
+                        )
+                            : null,
                       ),
+
                     );
                   },
                 );

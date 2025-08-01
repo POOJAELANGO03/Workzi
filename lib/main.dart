@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 import 'package:speechtotext/screens/login_page.dart';
 import 'package:speechtotext/screens/main_scaffold.dart';
-// The import for splashScreen is no longer needed.
-
 import 'firebase_options.dart';
 
 void main() async {
@@ -13,6 +12,8 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  tz.initializeTimeZones();
+  tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
   runApp(const MyApp());
 }
 
@@ -24,13 +25,31 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Task Management App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFC4E1E6)),
-        scaffoldBackgroundColor: const Color(0xFFF7F8F9),
+        // MODIFIED: This one line sets the default font for the whole app
+        fontFamily: 'Libertinus Sans',
+
+        scaffoldBackgroundColor: Colors.white,
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.black,
+          backgroundColor: Color(0xFF1976D2),
           foregroundColor: Colors.white,
-          elevation: 0,
+          elevation: 2,
           centerTitle: true,
+          titleTextStyle: TextStyle(
+            fontFamily: 'Libertinus Sans', // Also specify here for consistency
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1976D2)),
+        datePickerTheme: DatePickerThemeData(
+          backgroundColor: Colors.blue[50],
+          headerBackgroundColor: const Color(0xFF1976D2),
+          headerForegroundColor: Colors.white,
+        ),
+        timePickerTheme: TimePickerThemeData(
+          backgroundColor: Colors.blue[50],
+          hourMinuteColor: Colors.lightBlue.withOpacity(0.1),
+          dayPeriodColor: Colors.lightBlue.withOpacity(0.1),
         ),
       ),
       debugShowCheckedModeBanner: false,
@@ -47,19 +66,14 @@ class AuthWrapper extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // While checking auth state, show a simple loading indicator.
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
-
-        // If user is logged in, go to the main app.
         if (snapshot.hasData) {
           return const MainScaffold();
         }
-
-        // If user is not logged in, go directly to the login page.
         return const LoginPage();
       },
     );

@@ -161,7 +161,7 @@ class _TaskFormPageState extends State<TaskFormPage> with TickerProviderStateMix
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Color(0xFF1976d2), // Set to #1976d2, verify theme in main.dart
         elevation: 1,
         shadowColor: Colors.grey.withOpacity(0.2),
         leading: IconButton(
