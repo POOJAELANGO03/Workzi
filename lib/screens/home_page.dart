@@ -92,7 +92,6 @@ class _GradientPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// Main page structure remains the same.
 class StatusCardInfo {
   final String title;
   final IconData icon;
@@ -118,11 +117,29 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final AuthService _authService = AuthService();
+  // ## MODIFIED ##: Added a state variable to hold the future.
+  late Future<Map<String, int>> _taskCountsFuture;
+
+  // ## MODIFIED ##: Initialize the future in initState.
+  @override
+  void initState() {
+    super.initState();
+    _taskCountsFuture = _fetchTaskCounts();
+  }
+
+  // ## MODIFIED ##: Created a dedicated method to refresh the counts.
+  void _refreshTaskCounts() {
+    setState(() {
+      _taskCountsFuture = _fetchTaskCounts();
+    });
+  }
 
   Future<Map<String, int>> _fetchTaskCounts() async {
-    await Future.delayed(const Duration(seconds: 2));
+    // This delay is for demonstration; you can remove it if not needed.
+    await Future.delayed(const Duration(milliseconds: 500));
     final user = _authService.currentUser;
     if (user == null) return {};
+
     final activeTasksSnapshot = await FirebaseFirestore.instance
         .collection('Users_Tasks')
         .where('uid', isEqualTo: user.uid)
@@ -150,7 +167,8 @@ class _HomePageState extends State<HomePage> {
         actions: const [],
       ),
       body: RefreshIndicator(
-        onRefresh: () async => setState(() {}),
+        // ## MODIFIED ##: onRefresh now calls the new refresh method.
+        onRefresh: () async => _refreshTaskCounts(),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16.0),
@@ -163,8 +181,13 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 16),
               FutureBuilder<Map<String, int>>(
-                future: _fetchTaskCounts(),
+                // ## MODIFIED ##: The FutureBuilder now uses the state variable.
+                future: _taskCountsFuture,
                 builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting && snapshot.data == null) {
+                    // Show placeholders while waiting for the initial load
+                    return const Center(child: CircularProgressIndicator());
+                  }
                   if (snapshot.hasError) {
                     return const Center(
                       child: Text('Could not fetch tasks.'),
@@ -191,17 +214,17 @@ class _HomePageState extends State<HomePage> {
                       return StatusCard(
                         cardInfo: cardData[index],
                         onTap: () {
-                          if (counts != null) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => TaskListPage(
-                                  status: cardData[index].title,
-                                  isArchived: cardData[index].isArchived,
-                                ),
+                          // Navigate and then refresh the counts when the user returns.
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => TaskListPage(
+                                status: cardData[index].title,
+                                isArchived: cardData[index].isArchived,
                               ),
-                            ).then((_) => setState(() {}));
-                          }
+                            ),
+                            // ## MODIFIED ##: The .then() callback now calls the refresh method.
+                          ).then((_) => _refreshTaskCounts());
                         },
                       );
                     },
@@ -216,8 +239,6 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// ## MODIFIED WIDGET ##
-// I've updated this widget to use the new color scheme as requested.
 class StatusCard extends StatelessWidget {
   final StatusCardInfo cardInfo;
   final VoidCallback onTap;
@@ -231,7 +252,6 @@ class StatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = cardInfo.count;
-    // Define the new colors for the card
     const cardBackgroundColor = Color(0xFF2573A6);
     const cardForegroundColor = Colors.white;
 
@@ -241,13 +261,11 @@ class StatusCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12.0),
         decoration: BoxDecoration(
-          // Use the new background color
           color: cardBackgroundColor,
           borderRadius: BorderRadius.circular(12.0),
         ),
         child: Row(
           children: [
-            // Use white for the icon color
             Icon(cardInfo.icon, color: cardForegroundColor, size: 28),
             const SizedBox(width: 12),
             Expanded(
@@ -257,7 +275,6 @@ class StatusCard extends StatelessWidget {
                 children: [
                   Text(
                     cardInfo.title,
-                    // Use white for the title text color
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -268,13 +285,11 @@ class StatusCard extends StatelessWidget {
                   (count != null)
                       ? Text(
                     '$count Tasks',
-                    // Use a slightly transparent white for the subtitle
                     style: TextStyle(
                       color: cardForegroundColor.withOpacity(0.8),
                       fontSize: 14,
                     ),
                   )
-                  // Use white for the loader color
                       : GradientCircularLoader(color: cardForegroundColor),
                 ],
               ),
