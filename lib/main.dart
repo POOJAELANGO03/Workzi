@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:speechtotext/screens/notification_service.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:speechtotext/screens/login_page.dart';
@@ -14,6 +15,7 @@ void main() async {
   );
   tz.initializeTimeZones();
   tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
+  NotificationService.init();
   runApp(const MyApp());
 }
 
@@ -25,7 +27,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Task Management App',
       theme: ThemeData(
-        // MODIFIED: This one line sets the default font for the whole app
         fontFamily: 'Libertinus Sans',
 
         scaffoldBackgroundColor: Colors.white,
@@ -35,7 +36,7 @@ class MyApp extends StatelessWidget {
           elevation: 2,
           centerTitle: true,
           titleTextStyle: TextStyle(
-            fontFamily: 'Libertinus Sans', // Also specify here for consistency
+            fontFamily: 'Libertinus Sans',
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),

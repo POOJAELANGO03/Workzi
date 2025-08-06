@@ -7,6 +7,7 @@ import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:speechtotext/screens/auth_service.dart';
+import 'package:speechtotext/screens/notification_service.dart';
 
 class TaskFormPage extends StatefulWidget {
   final DateTime? selectedDate;
@@ -133,7 +134,18 @@ class _TaskFormPageState extends State<TaskFormPage> with TickerProviderStateMix
         'status': 'To Do',
       };
 
-      await _firestore.collection('Users_Tasks').add(taskData);
+      final docRef = await _firestore.collection('Users_Tasks').add(taskData);
+
+      // Schedule the notification if reminders are enabled
+      if (_reminderEnabled && _selectedEndDate != null && _endTimeController.text.isNotEmpty) {
+        await NotificationService.scheduleOverdueNotification(
+          taskId: docRef.id, // Use the new document's ID
+          title: _titleController.text,
+          description: _descriptionController.text,
+          endDate: _selectedEndDate!,
+          endTime: _endTimeController.text,
+        );
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Task saved successfully!'), backgroundColor: Colors.green),
@@ -161,7 +173,7 @@ class _TaskFormPageState extends State<TaskFormPage> with TickerProviderStateMix
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Color(0xFF1976d2), // Set to #1976d2, verify theme in main.dart
+        backgroundColor: Color(0xFF1976d2),
         elevation: 1,
         shadowColor: Colors.grey.withOpacity(0.2),
         leading: IconButton(

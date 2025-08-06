@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:speechtotext/screens/auth_service.dart';
+import 'package:speechtotext/screens/notification_service.dart';
 import 'history.dart';
 
 class TaskListPage extends StatelessWidget {
   final String status;
   final bool isArchived;
 
-  // MODIFIED: Removed the obsolete 'color' parameter
   const TaskListPage({
     Key? key,
     required this.status,
@@ -149,8 +149,6 @@ class TaskListPage extends StatelessWidget {
     );
   }
 
-  // ALL HELPER FUNCTIONS ARE RESTORED
-
   Widget _buildDetailRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -186,6 +184,9 @@ class TaskListPage extends StatelessWidget {
   }
 
   Future<void> _deleteAndArchiveTask(BuildContext context, String taskId) async {
+    // Cancel any pending notifications for this task first
+    await NotificationService.cancelNotification(taskId);
+
     final taskRef = FirebaseFirestore.instance.collection('Users_Tasks').doc(taskId);
     try {
       final doc = await taskRef.get();
@@ -204,6 +205,11 @@ class TaskListPage extends StatelessWidget {
   }
 
   Future<void> _updateTaskStatus(BuildContext context, String taskId, String newStatus) async {
+    // If the task is being marked as 'Done', cancel its notifications
+    if (newStatus == 'Done') {
+      await NotificationService.cancelNotification(taskId);
+    }
+
     await FirebaseFirestore.instance.collection('Users_Tasks').doc(taskId).update({'status': newStatus});
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Task moved to "$newStatus"')));
