@@ -161,15 +161,19 @@ class _CalendarPageState extends State<CalendarPage> {
     for (var doc in snapshot.docs) {
       final task = TaskEvent.fromFirestore(doc);
       final eventDate = task.startDate ?? DateTime.now();
-      final eventDateUtc = DateTime.utc(eventDate.year, eventDate.month, eventDate.day);
-      if (firestoreEvents[eventDateUtc] == null) firestoreEvents[eventDateUtc] = [];
+      final eventDateUtc =
+      DateTime.utc(eventDate.year, eventDate.month, eventDate.day);
+      if (firestoreEvents[eventDateUtc] == null) {
+        firestoreEvents[eventDateUtc] = [];
+      }
       firestoreEvents[eventDateUtc]!.add(task);
     }
     return firestoreEvents;
   }
 
   Future<Map<DateTime, List<TaskEvent>>> _fetchGoogleCalendarEvents() async {
-    final googleSignIn = GoogleSignIn(scopes: [calendar.CalendarApi.calendarScope]);
+    final googleSignIn =
+    GoogleSignIn(scopes: [calendar.CalendarApi.calendarScope]);
     final googleUser = await googleSignIn.signInSilently();
     if (googleUser == null) {
       print("User not signed in for calendar or needs to grant permission.");
@@ -184,9 +188,11 @@ class _CalendarPageState extends State<CalendarPage> {
     final Map<DateTime, List<TaskEvent>> googleEvents = {};
     if (eventsResult.items != null) {
       for (var event in eventsResult.items!) {
-        final startTime = event.start?.dateTime?.toUtc() ?? event.start?.date?.toUtc();
+        final startTime =
+            event.start?.dateTime?.toUtc() ?? event.start?.date?.toUtc();
         if (startTime != null) {
-          final eventDate = DateTime.utc(startTime.year, startTime.month, startTime.day);
+          final eventDate =
+          DateTime.utc(startTime.year, startTime.month, startTime.day);
           final task = TaskEvent(
             id: event.id ?? '',
             title: event.summary ?? 'No Title',
@@ -225,58 +231,73 @@ class _CalendarPageState extends State<CalendarPage> {
 
   Future<void> _deleteTask(String taskId) async {
     try {
-      final taskRef = FirebaseFirestore.instance.collection('Users_Tasks').doc(taskId);
+      final taskRef =
+      FirebaseFirestore.instance.collection('Users_Tasks').doc(taskId);
       final doc = await taskRef.get();
       if (doc.exists) {
-        await FirebaseFirestore.instance.collection('Users_Deleted_Tasks').doc(taskId).set(doc.data()!);
+        await FirebaseFirestore.instance
+            .collection('Users_Deleted_Tasks')
+            .doc(taskId)
+            .set(doc.data()!);
         await taskRef.delete();
         _fetchAllEvents(); // Refresh calendar
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Task Deleted and Archived')));
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Task Deleted and Archived')));
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to delete task.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to delete task.')));
       }
     }
   }
 
+  // ## MODIFIED ##: Dialog reverted to default light theme
   void _showTaskDetailsDialog(TaskEvent event) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(event.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          title:
+          Text(event.title, style: const TextStyle(fontWeight: FontWeight.bold)),
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
                 if (event.description.isNotEmpty) ...[
-                  const Text('Description:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('Description:',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   Text(event.description),
                   const SizedBox(height: 10),
                 ],
                 if (!event.isGoogleEvent) ...[
-                  const Text('Category:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('Category:',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   Text(event.category),
                   const SizedBox(height: 10),
-                  const Text('Priority:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('Priority:',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   Text(event.priority),
                   const SizedBox(height: 10),
-                  const Text('Time:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('Time:',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   Text('${event.startTime} - ${event.endTime}'),
                   if (event.startDate != null) ...[
                     const SizedBox(height: 10),
-                    const Text('Start Date:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text('Start Date:',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                     Text(DateFormat('dd/MM/yyyy').format(event.startDate!)),
                   ],
                   if (event.endDate != null) ...[
                     const SizedBox(height: 10),
-                    const Text('End Date:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text('End Date:',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                     Text(DateFormat('dd/MM/yyyy').format(event.endDate!)),
                   ],
                   const Divider(height: 20),
-                  const Text('Update Status:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('Update Status:',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8.0,
@@ -290,8 +311,12 @@ class _CalendarPageState extends State<CalendarPage> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: event.status == status ? Theme.of(context).primaryColor : Colors.grey.shade300,
-                        foregroundColor: event.status == status ? Colors.white : Colors.black,
+                        backgroundColor: event.status == status
+                            ? Theme.of(context).primaryColor
+                            : Colors.grey.shade300,
+                        foregroundColor: event.status == status
+                            ? Colors.white
+                            : Colors.black,
                       ),
                       child: Text(status),
                     ))
@@ -331,9 +356,8 @@ class _CalendarPageState extends State<CalendarPage> {
 
   @override
   Widget build(BuildContext context) {
-    // MODIFIED: Scaffold now uses the white background from the theme
+    // ## MODIFIED ##: Reverted to light theme with specific blue elements
     return Scaffold(
-      // MODIFIED: AppBar is now a standard AppBar and will be styled by the theme
       appBar: AppBar(
         title: const Text('Calendar'),
         actions: [
@@ -350,7 +374,6 @@ class _CalendarPageState extends State<CalendarPage> {
           ? Center(child: Text(_errorMessage!))
           : Column(
         children: [
-          // MODIFIED: Calendar is restyled for the new theme
           TableCalendar<TaskEvent>(
             firstDay: DateTime.utc(2020, 1, 1),
             lastDay: DateTime.utc(2030, 12, 31),
@@ -370,23 +393,20 @@ class _CalendarPageState extends State<CalendarPage> {
             onPageChanged: (focusedDay) {
               _focusedDay = focusedDay;
             },
-            headerStyle: HeaderStyle(
-              titleTextStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-              formatButtonTextStyle: TextStyle(color: Theme.of(context).primaryColor),
-              formatButtonDecoration: BoxDecoration(
-                border: Border.fromBorderSide(BorderSide(color: Colors.grey.shade300)),
-                borderRadius: const BorderRadius.all(Radius.circular(12.0)),
-              ),
-            ),
             calendarStyle: CalendarStyle(
+              // Today's date circle style
               todayDecoration: BoxDecoration(
                 color: Colors.blue.shade100,
                 shape: BoxShape.circle,
               ),
+              // ## MODIFIED ##: Selected date circle is blue
               selectedDecoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
+                color: const Color(0xFF2573A6),
                 shape: BoxShape.circle,
               ),
+              // ## MODIFIED ##: Text inside selected circle is white
+              selectedTextStyle: const TextStyle(color: Colors.white),
+              // Event marker style
               markerDecoration: BoxDecoration(
                 color: Colors.orange.shade400,
                 shape: BoxShape.circle,
@@ -399,31 +419,43 @@ class _CalendarPageState extends State<CalendarPage> {
               valueListenable: _selectedEvents,
               builder: (context, value, _) {
                 if (value.isEmpty) {
-                  return const Center(child: Text('No events for this day.'));
+                  return const Center(
+                      child: Text('No events for this day.'));
                 }
                 return ListView.builder(
                   itemCount: value.length,
                   itemBuilder: (context, index) {
                     final event = value[index];
                     return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                      // ## MODIFIED ##: Task card background is blue
+                      color: const Color(0xFF2573A6),
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 12.0, vertical: 4.0),
                       child: ListTile(
                         onTap: () => _showTaskDetailsDialog(event),
+                        // ## MODIFIED ##: Icons and text are white for contrast
                         leading: Icon(
-                          event.isGoogleEvent ? Icons.calendar_month : Icons.check_circle_outline,
-                          color: Theme.of(context).primaryColor,
+                          event.isGoogleEvent
+                              ? Icons.calendar_month
+                              : Icons.check_circle_outline,
+                          color: Colors.white,
                         ),
-                        title: Text(event.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        title: Text(
+                          event.title,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
+                        ),
                         trailing: !event.isGoogleEvent
                             ? IconButton(
-                          icon: Icon(Icons.delete, color: Colors.grey.shade600),
+                          icon: Icon(Icons.delete,
+                              color: Colors.white.withOpacity(0.7)),
                           onPressed: () async {
                             await _deleteTask(event.id);
                           },
                         )
                             : null,
                       ),
-
                     );
                   },
                 );

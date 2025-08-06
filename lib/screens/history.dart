@@ -92,18 +92,24 @@ class _HistoryPageState extends State<HistoryPage> {
 
   Future<void> _deleteTask(String taskId) async {
     try {
-      final taskRef = FirebaseFirestore.instance.collection('Users_Tasks').doc(taskId);
+      final taskRef =
+      FirebaseFirestore.instance.collection('Users_Tasks').doc(taskId);
       final doc = await taskRef.get();
       if (doc.exists) {
-        await FirebaseFirestore.instance.collection('Users_Deleted_Tasks').doc(taskId).set(doc.data()!);
+        await FirebaseFirestore.instance
+            .collection('Users_Deleted_Tasks')
+            .doc(taskId)
+            .set(doc.data()!);
         await taskRef.delete();
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Task deleted and archived successfully!')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Task deleted and archived successfully!')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to delete task.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to delete task.')));
       }
     }
   }
@@ -116,7 +122,8 @@ class _HistoryPageState extends State<HistoryPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear All Tasks?'),
-        content: const Text('This will move all your active tasks to the deleted section. This action cannot be undone.'),
+        content: const Text(
+            'This will move all your active tasks to the deleted section. This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -142,18 +149,22 @@ class _HistoryPageState extends State<HistoryPage> {
       final batch = FirebaseFirestore.instance.batch();
 
       for (var doc in snapshot.docs) {
-        final deletedTaskRef = FirebaseFirestore.instance.collection('Users_Deleted_Tasks').doc(doc.id);
+        final deletedTaskRef = FirebaseFirestore.instance
+            .collection('Users_Deleted_Tasks')
+            .doc(doc.id);
         batch.set(deletedTaskRef, doc.data()!);
         batch.delete(doc.reference);
       }
       await batch.commit();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('All tasks cleared and archived')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('All tasks cleared and archived')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to clear tasks.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to clear tasks.')));
       }
     }
   }
@@ -169,7 +180,6 @@ class _HistoryPageState extends State<HistoryPage> {
     }
 
     return Scaffold(
-      // MODIFIED: AppBar now uses the theme from main.dart
       appBar: AppBar(
         title: const Text('Task History'),
         actions: [
@@ -207,15 +217,14 @@ class _HistoryPageState extends State<HistoryPage> {
             );
           }
 
-          final tasks = snapshot.data!.docs
-              .map((doc) => Task.fromFirestore(doc))
-              .toList();
+          final tasks =
+          snapshot.data!.docs.map((doc) => Task.fromFirestore(doc)).toList();
 
           final groupedTasks = _groupTasks(tasks);
           final dateKeys = groupedTasks.keys.toList();
 
           return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.all(16.0),
             itemCount: dateKeys.length,
             itemBuilder: (context, index) {
               final dateKey = dateKeys[index];
@@ -224,11 +233,10 @@ class _HistoryPageState extends State<HistoryPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
+                    padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
                     child: Text(
                       dateKey,
-                      style: const TextStyle(
-                        fontSize: 20,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -254,59 +262,52 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 }
 
-// MODIFIED: Task card is restyled for the new white theme
 class TaskExpansionTile extends StatelessWidget {
   final Task task;
   final VoidCallback onDelete;
 
-  const TaskExpansionTile({Key? key, required this.task, required this.onDelete}) : super(key: key);
-
-  Color _getPriorityColor(String priority) {
-    switch (priority.toLowerCase()) {
-      case 'high':
-        return Colors.red.shade400;
-      case 'medium':
-        return Colors.orange.shade400;
-      case 'low':
-        return Colors.blue.shade400;
-      default:
-        return Colors.grey;
-    }
-  }
+  const TaskExpansionTile(
+      {Key? key, required this.task, required this.onDelete})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final priorityColor = _getPriorityColor(task.priority);
     return Card(
-      elevation: 1,
+      color: const Color(0xFF2573A6), // Blue background for the card
+      elevation: 2,
       margin: const EdgeInsets.symmetric(vertical: 6.0),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
       ),
       child: ExpansionTile(
-        leading: Icon(Icons.check_circle, color: priorityColor),
+        // All icons and text are now white for contrast
+        collapsedIconColor: Colors.white,
+        iconColor: Colors.white,
+        leading: const Icon(Icons.check_circle_outline, color: Colors.white),
         title: Text(
           task.title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(
+              fontWeight: FontWeight.bold, color: Colors.white),
         ),
         subtitle: Text(
           'Priority: ${task.priority} | Status: ${task.status}',
-          style: TextStyle(color: Colors.grey[600], fontSize: 12),
+          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
         ),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         children: <Widget>[
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Divider(height: 16),
+              const Divider(height: 16, color: Colors.white54),
               if (task.description.isNotEmpty) ...[
                 const Text(
                   'Description',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 const SizedBox(height: 4),
-                Text(task.description, style: TextStyle(color: Colors.grey[800])),
+                Text(task.description,
+                    style: TextStyle(color: Colors.white.withOpacity(0.9))),
                 const SizedBox(height: 16),
               ],
               Row(
@@ -315,6 +316,7 @@ class TaskExpansionTile extends StatelessWidget {
                   _buildDetailColumn('Category', task.category),
                   if (task.startTime.isNotEmpty)
                     _buildDetailColumn('Start Time', task.startTime),
+                  // ## RECTIFIED LINE ##
                   if (task.endTime.isNotEmpty)
                     _buildDetailColumn('End Time', task.endTime),
                 ],
@@ -323,7 +325,7 @@ class TaskExpansionTile extends StatelessWidget {
               Align(
                 alignment: Alignment.centerRight,
                 child: IconButton(
-                  icon: Icon(Icons.delete, color: Colors.grey[600]),
+                  icon: Icon(Icons.delete, color: Colors.white.withOpacity(0.7)),
                   onPressed: onDelete,
                   tooltip: 'Delete and Archive',
                 ),
@@ -335,16 +337,20 @@ class TaskExpansionTile extends StatelessWidget {
     );
   }
 
+  // Helper widget to build detail columns with white text
   Widget _buildDetailColumn(String title, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700], fontSize: 12),
+          style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white.withOpacity(0.7),
+              fontSize: 12),
         ),
         const SizedBox(height: 4),
-        Text(value),
+        Text(value, style: const TextStyle(color: Colors.white)),
       ],
     );
   }

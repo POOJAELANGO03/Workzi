@@ -217,6 +217,7 @@ class _HomePageState extends State<HomePage> {
 }
 
 // ## MODIFIED WIDGET ##
+// I've updated this widget to use the new color scheme as requested.
 class StatusCard extends StatelessWidget {
   final StatusCardInfo cardInfo;
   final VoidCallback onTap;
@@ -230,21 +231,24 @@ class StatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = cardInfo.count;
+    // Define the new colors for the card
+    const cardBackgroundColor = Color(0xFF2573A6);
+    const cardForegroundColor = Colors.white;
 
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12.0),
       child: Container(
-        padding: const EdgeInsets.all(12.0), // A single padding for the container
+        padding: const EdgeInsets.all(12.0),
         decoration: BoxDecoration(
-          color: cardInfo.color.withOpacity(0.1),
+          // Use the new background color
+          color: cardBackgroundColor,
           borderRadius: BorderRadius.circular(12.0),
-          border: Border.all(color: cardInfo.color.withOpacity(0.3)),
         ),
-        // The ListTile is replaced with a Row/Column for better alignment control.
         child: Row(
           children: [
-            Icon(cardInfo.icon, color: cardInfo.color, size: 28),
+            // Use white for the icon color
+            Icon(cardInfo.icon, color: cardForegroundColor, size: 28),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -253,16 +257,25 @@ class StatusCard extends StatelessWidget {
                 children: [
                   Text(
                     cardInfo.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    // Use white for the title text color
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: cardForegroundColor,
+                    ),
                   ),
                   const SizedBox(height: 6),
-                  // This part conditionally shows the text or the loader.
                   (count != null)
                       ? Text(
                     '$count Tasks',
-                    style: TextStyle(color: Colors.black.withOpacity(0.6), fontSize: 14),
+                    // Use a slightly transparent white for the subtitle
+                    style: TextStyle(
+                      color: cardForegroundColor.withOpacity(0.8),
+                      fontSize: 14,
+                    ),
                   )
-                      : GradientCircularLoader(color: cardInfo.color),
+                  // Use white for the loader color
+                      : GradientCircularLoader(color: cardForegroundColor),
                 ],
               ),
             ),

@@ -17,10 +17,9 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final user = _authService.currentUser;
-    final primaryColor = Theme.of(context).primaryColor;
+    const themeColor = Color(0xFF2573A6); // Define theme color for reuse
 
     return Scaffold(
-      // MODIFIED: AppBar is now a standard AppBar
       appBar: AppBar(
         title: const Text('Profile'),
       ),
@@ -35,9 +34,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 CircleAvatar(
                   radius: 50,
                   backgroundColor: Colors.grey.shade200,
-                  backgroundImage: user?.photoURL != null
-                      ? NetworkImage(user!.photoURL!)
-                      : null,
+                  backgroundImage:
+                  user?.photoURL != null ? NetworkImage(user!.photoURL!) : null,
                   child: user?.photoURL == null
                       ? Icon(Icons.person, size: 50, color: Colors.grey.shade400)
                       : null,
@@ -47,8 +45,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   right: 0,
                   child: CircleAvatar(
                     radius: 18,
-                    // MODIFIED: Edit button uses new theme color
-                    backgroundColor: primaryColor,
+                    backgroundColor: themeColor,
                     child: IconButton(
                       icon: const Icon(Icons.edit, color: Colors.white, size: 18),
                       onPressed: () async {
@@ -93,7 +90,6 @@ class _ProfilePageState extends State<ProfilePage> {
             // --- Settings Options ---
             _buildSettingsTile(
               icon: Icons.timer_outlined,
-              iconColor: Colors.blue,
               title: 'Reminders',
               value: _remindersOn,
               onChanged: (value) {
@@ -105,7 +101,6 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 12),
             _buildSettingsTile(
               icon: Icons.event_note,
-              iconColor: Colors.orange,
               title: 'All Events',
               value: _eventsOn,
               onChanged: (value) {
@@ -116,7 +111,8 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 40),
 
-            // MODIFIED: Sign Out Button is restyled
+            // ## MODIFIED BUTTON ##
+            // The Sign Out button is now an OutlinedButton with the theme color.
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
@@ -124,14 +120,15 @@ class _ProfilePageState extends State<ProfilePage> {
                   await _authService.signOut();
                 },
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red,
-                  side: BorderSide(color: Colors.red.shade200),
+                  foregroundColor: themeColor, // Blue text
+                  side: const BorderSide(color: themeColor, width: 2), // Blue border
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                child: const Text('Sign Out',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               ),
             ),
             const SizedBox(height: 20),
@@ -141,27 +138,27 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // MODIFIED: Settings tile restyled for the new theme
   Widget _buildSettingsTile({
     required IconData icon,
-    required Color iconColor,
     required String title,
     required bool value,
     required Function(bool) onChanged,
   }) {
     return Card(
-      elevation: 0,
-      color: Colors.grey.shade100,
+      color: const Color(0xFF2573A6),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
       ),
       child: ListTile(
-        leading: Icon(icon, color: iconColor),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        leading: Icon(icon, color: Colors.white),
+        title: Text(title,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
         trailing: Switch(
           value: value,
           onChanged: onChanged,
+          activeColor: Colors.white,
+          activeTrackColor: Colors.white.withOpacity(0.5),
         ),
       ),
     );

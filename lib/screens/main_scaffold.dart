@@ -73,7 +73,7 @@ class _MainScaffoldState extends State<MainScaffold> {
   @override
   Widget build(BuildContext context) {
     // MODIFIED: primaryActionColor now uses your blue theme color
-    const Color primaryActionColor = Color(0xFF1976D2);
+    const Color primaryActionColor = Color(0xFF2573A6);
 
     return Scaffold(
       body: Center(
@@ -116,7 +116,7 @@ class _MainScaffoldState extends State<MainScaffold> {
     required String tooltip,
   }) {
     // MODIFIED: activeColor now uses your blue theme color
-    const Color activeColor = Color(0xFF1976D2);
+    const Color activeColor = Color(0xFF2573A6);
 
     return IconButton(
       icon: Icon(

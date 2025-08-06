@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// MODIFIED: Fixed the incorrect package path
 import 'package:intl/intl.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -159,7 +158,7 @@ class _TaskFormPageState extends State<TaskFormPage>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Task saved successfully!'),
-            backgroundColor: Theme.of(context).primaryColor,
+            backgroundColor: const Color(0xFF2573A6),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             margin: const EdgeInsets.all(12),
@@ -178,9 +177,15 @@ class _TaskFormPageState extends State<TaskFormPage>
 
   @override
   Widget build(BuildContext context) {
+    // ## MODIFIED ##: Defined theme color for reuse throughout the build method.
+    const themeColor = Color(0xFF2573A6);
+
     return Scaffold(
       appBar: AppBar(
+        // ## MODIFIED ##: AppBar styled to match the theme.
         title: const Text('Create New Task'),
+        backgroundColor: themeColor,
+        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -222,11 +227,14 @@ class _TaskFormPageState extends State<TaskFormPage>
             const SizedBox(height: 16),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.notifications_active_rounded),
+              leading: const Icon(Icons.notifications_active_rounded, color: themeColor),
               title: const Text('Enable Reminder'),
               trailing: Switch(
+                // ## MODIFIED ##: Switch styled to match the theme.
                 value: _reminderEnabled,
                 onChanged: (value) => setState(() => _reminderEnabled = value),
+                activeColor: themeColor,
+                activeTrackColor: themeColor.withOpacity(0.5),
               ),
             ),
             const SizedBox(height: 24),
@@ -234,7 +242,10 @@ class _TaskFormPageState extends State<TaskFormPage>
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _isSaving ? null : _saveTask,
+                // ## MODIFIED ##: Button styled to match the theme.
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: themeColor,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -248,6 +259,8 @@ class _TaskFormPageState extends State<TaskFormPage>
       ),
     );
   }
+
+  // --- Helper and Speech-to-Text methods ---
 
   void _onSpeechStatus(String status) {
     if (mounted) {
@@ -341,6 +354,7 @@ class _TaskFormPageState extends State<TaskFormPage>
   }
 
   Widget _buildTextField({required String hint, required TextEditingController controller, required IconData icon, bool readOnly = false, VoidCallback? onTap, Widget? suffixIcon, int maxLines = 1}) {
+    const themeColor = Color(0xFF2573A6);
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: TextFormField(
@@ -350,9 +364,10 @@ class _TaskFormPageState extends State<TaskFormPage>
         maxLines: maxLines,
         decoration: InputDecoration(
           labelText: hint,
-          prefixIcon: Icon(icon),
+          prefixIcon: Icon(icon, color: Colors.grey.shade600),
           suffixIcon: suffixIcon,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: themeColor, width: 2)),
           filled: true,
           fillColor: Colors.grey.shade100,
         ),
@@ -361,14 +376,16 @@ class _TaskFormPageState extends State<TaskFormPage>
   }
 
   Widget _buildDropdownField({required String hint, required String value, required List<String> items, required IconData icon, required ValueChanged<String?> onChanged}) {
+    const themeColor = Color(0xFF2573A6);
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: DropdownButtonFormField<String>(
         value: value,
         decoration: InputDecoration(
           labelText: hint,
-          prefixIcon: Icon(icon),
+          prefixIcon: Icon(icon, color: Colors.grey.shade600),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: themeColor, width: 2)),
           filled: true,
           fillColor: Colors.grey.shade100,
         ),
@@ -379,7 +396,7 @@ class _TaskFormPageState extends State<TaskFormPage>
   }
 
   Widget _buildSpeechButton() {
-    final primaryColor = Theme.of(context).primaryColor;
+    const themeColor = Color(0xFF2573A6);
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
       child: GestureDetector(
@@ -389,11 +406,12 @@ class _TaskFormPageState extends State<TaskFormPage>
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: _isListening ? Colors.red.shade400 : primaryColor,
+            // ## MODIFIED ##: Mic button uses theme color.
+            color: _isListening ? Colors.red.shade400 : themeColor,
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: (_isListening ? Colors.red.shade400 : primaryColor).withOpacity(0.3),
+                color: (_isListening ? Colors.red.shade400 : themeColor).withOpacity(0.3),
                 spreadRadius: _isListening ? 4 : 2,
                 blurRadius: 8,
               ),
@@ -406,14 +424,17 @@ class _TaskFormPageState extends State<TaskFormPage>
   }
 
   Widget _buildSpeechVisualization() {
+    const themeColor = Color(0xFF2573A6);
+    // The "Listening..." UI now uses the red color for a distinct "recording" state, which is a good UX practice.
+    // If you prefer it to be blue, you can change Colors.red to themeColor in the BoxDecoration and TextStyle below.
     if (!_isListening) return const SizedBox.shrink();
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
+        color: Colors.red.shade50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.shade200),
+        border: Border.all(color: Colors.red.shade200),
       ),
       child: Column(
         children: [
@@ -426,11 +447,11 @@ class _TaskFormPageState extends State<TaskFormPage>
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: Colors.blue,
+                    color: Colors.red,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.blue.withOpacity(_pulseAnimation.value - 0.8),
+                        color: Colors.red.withOpacity(_pulseAnimation.value - 0.8),
                         spreadRadius: _pulseAnimation.value * 4,
                         blurRadius: 8,
                       )
@@ -441,7 +462,7 @@ class _TaskFormPageState extends State<TaskFormPage>
               const SizedBox(width: 8),
               Text(
                 'Listening... ${_formatDuration(_recordingDuration)}',
-                style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.blue),
+                style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.red),
               ),
             ],
           ),
@@ -505,7 +526,8 @@ class WaveformPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.blue.shade300..style = PaintingStyle.fill;
+    // ## MODIFIED ##: Changed the waveform color to red to match the "listening" theme.
+    final paint = Paint()..color = Colors.red.shade300..style = PaintingStyle.fill;
     final centerY = size.height / 2;
     const barWidth = 3.0;
     const barSpacing = 2.0;

@@ -72,6 +72,20 @@ class _TaskFormPageState extends State<TaskFormPage> with TickerProviderStateMix
     }
   }
 
+  @override
+  void dispose() {
+    _speechToText.stop();
+    _waveAnimationController.dispose();
+    _pulseAnimationController.dispose();
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _startDateController.dispose();
+    _endDateController.dispose();
+    _startTimeController.dispose();
+    _endTimeController.dispose();
+    super.dispose();
+  }
+
   Future<void> _selectDate(
       BuildContext context,
       TextEditingController controller,
@@ -136,10 +150,9 @@ class _TaskFormPageState extends State<TaskFormPage> with TickerProviderStateMix
 
       final docRef = await _firestore.collection('Users_Tasks').add(taskData);
 
-      // Schedule the notification if reminders are enabled
       if (_reminderEnabled && _selectedEndDate != null && _endTimeController.text.isNotEmpty) {
         await NotificationService.scheduleOverdueNotification(
-          taskId: docRef.id, // Use the new document's ID
+          taskId: docRef.id,
           title: _titleController.text,
           description: _descriptionController.text,
           endDate: _selectedEndDate!,
@@ -170,10 +183,14 @@ class _TaskFormPageState extends State<TaskFormPage> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+    // ## MODIFIED ## Define theme color for reuse
+    const themeColor = Color(0xFF2573A6);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Color(0xFF1976d2),
+        // ## MODIFIED ##
+        backgroundColor: themeColor,
         elevation: 1,
         shadowColor: Colors.grey.withOpacity(0.2),
         leading: IconButton(
@@ -219,11 +236,12 @@ class _TaskFormPageState extends State<TaskFormPage> with TickerProviderStateMix
               decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(12)),
               child: Row(
                 children: [
-                  Icon(Icons.notifications_active, color: Colors.blue[700]),
+                  Icon(Icons.notifications_active, color: themeColor),
                   const SizedBox(width: 12),
                   const Text('Enable Reminder', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                   const Spacer(),
-                  Switch(value: _reminderEnabled, onChanged: (value) => setState(() => _reminderEnabled = value), activeTrackColor: Colors.blue.shade200, activeColor: Colors.blue.shade600),
+                  // ## MODIFIED ##
+                  Switch(value: _reminderEnabled, onChanged: (value) => setState(() => _reminderEnabled = value), activeTrackColor: themeColor.withOpacity(0.5), activeColor: themeColor),
                 ],
               ),
             ),
@@ -231,7 +249,8 @@ class _TaskFormPageState extends State<TaskFormPage> with TickerProviderStateMix
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _isSaving ? null : _saveTask,
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade600, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 5, shadowColor: Colors.blue.withOpacity(0.4)),
+                // ## MODIFIED ##
+                style: ElevatedButton.styleFrom(backgroundColor: themeColor, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 5, shadowColor: themeColor.withOpacity(0.4)),
                 child: _isSaving
                     ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
                     : const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.save_alt_rounded, size: 20), SizedBox(width: 8), Text('Save Task', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))]),
@@ -371,18 +390,23 @@ class _TaskFormPageState extends State<TaskFormPage> with TickerProviderStateMix
   }
 
   Widget _buildTextField({required String hint, required TextEditingController controller, required IconData icon, bool readOnly = false, VoidCallback? onTap, Widget? suffixIcon, int maxLines = 1}) {
-    return Container(margin: const EdgeInsets.only(bottom: 16), child: TextFormField(controller: controller, readOnly: readOnly, onTap: onTap, maxLines: maxLines, decoration: InputDecoration(hintText: hint, prefixIcon: Icon(icon, color: Colors.grey[600]), suffixIcon: suffixIcon, filled: true, fillColor: Colors.grey[50], border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.blue, width: 2)), contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16))));
+    const themeColor = Color(0xFF2573A6);
+    return Container(margin: const EdgeInsets.only(bottom: 16), child: TextFormField(controller: controller, readOnly: readOnly, onTap: onTap, maxLines: maxLines, decoration: InputDecoration(hintText: hint, prefixIcon: Icon(icon, color: Colors.grey[600]), suffixIcon: suffixIcon, filled: true, fillColor: Colors.grey[50], border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: themeColor, width: 2)), contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16))));
   }
 
   Widget _buildDropdownField({required String hint, required String value, required List<String> items, required IconData icon, required ValueChanged<String?> onChanged}) {
-    return Container(margin: const EdgeInsets.only(bottom: 16), child: DropdownButtonFormField<String>(value: value, decoration: InputDecoration(hintText: hint, prefixIcon: Icon(icon, color: Colors.grey[600]), filled: true, fillColor: Colors.grey[50], border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.blue, width: 2)), contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16)), items: items.map((String item) => DropdownMenuItem<String>(value: item, child: Text(item))).toList(), onChanged: onChanged));
+    const themeColor = Color(0xFF2573A6);
+    return Container(margin: const EdgeInsets.only(bottom: 16), child: DropdownButtonFormField<String>(value: value, decoration: InputDecoration(hintText: hint, prefixIcon: Icon(icon, color: Colors.grey[600]), filled: true, fillColor: Colors.grey[50], border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: themeColor, width: 2)), contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16)), items: items.map((String item) => DropdownMenuItem<String>(value: item, child: Text(item))).toList(), onChanged: onChanged));
   }
 
   Widget _buildSpeechButton() {
-    return Padding(padding: const EdgeInsets.only(right: 8.0), child: GestureDetector(onTap: _speechEnabled ? (_isListening ? _stopListening : _startListening) : null, child: AnimatedContainer(duration: const Duration(milliseconds: 300), width: 44, height: 44, decoration: BoxDecoration(color: _isListening ? Colors.red : Colors.blue, shape: BoxShape.circle, boxShadow: [BoxShadow(color: (_isListening ? Colors.red : Colors.blue).withOpacity(0.3), spreadRadius: _isListening ? 4 : 2, blurRadius: 8)]), child: Icon(_isListening ? Icons.stop : Icons.mic, size: 24, color: Colors.white))));
+    const themeColor = Color(0xFF2573A6);
+    // ## MODIFIED ##
+    return Padding(padding: const EdgeInsets.only(right: 8.0), child: GestureDetector(onTap: _speechEnabled ? (_isListening ? _stopListening : _startListening) : null, child: AnimatedContainer(duration: const Duration(milliseconds: 300), width: 44, height: 44, decoration: BoxDecoration(color: _isListening ? Colors.red : themeColor, shape: BoxShape.circle, boxShadow: [BoxShadow(color: (_isListening ? Colors.red : themeColor).withOpacity(0.3), spreadRadius: _isListening ? 4 : 2, blurRadius: 8)]), child: Icon(_isListening ? Icons.stop : Icons.mic, size: 24, color: Colors.white))));
   }
 
   Widget _buildSpeechVisualization() {
+    // This visualization uses red to indicate the "recording" state, which is okay to keep.
     if (!_isListening) return const SizedBox.shrink();
     return Container(margin: const EdgeInsets.only(bottom: 16, left: 4, right: 4), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.red.shade200)), child: Column(children: [Row(mainAxisAlignment: MainAxisAlignment.center, children: [AnimatedBuilder(animation: _pulseAnimationController, builder: (context, child) => Container(width: 8, height: 8, decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.red.withOpacity(_pulseAnimation.value - 0.8), spreadRadius: _pulseAnimation.value * 4, blurRadius: 8)]))), const SizedBox(width: 8), Text('Listening... ${_formatDuration(_recordingDuration)}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.red))]), if (_currentWords.isNotEmpty) ...[const SizedBox(height: 8), Text(_currentWords, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: Colors.black87))], const SizedBox(height: 8), Container(height: 40, width: double.infinity, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey[300]!)), child: AnimatedBuilder(animation: _waveAnimationController, builder: (context, child) => CustomPaint(painter: WaveformPainter(animationValue: _waveAnimationController.value, soundLevel: _soundLevel), size: const Size(double.infinity, 40))))]));
   }
@@ -411,20 +435,6 @@ class _TaskFormPageState extends State<TaskFormPage> with TickerProviderStateMix
       });
     }
   }
-
-  @override
-  void dispose() {
-    _speechToText.stop();
-    _waveAnimationController.dispose();
-    _pulseAnimationController.dispose();
-    _titleController.dispose();
-    _descriptionController.dispose();
-    _startDateController.dispose();
-    _endDateController.dispose();
-    _startTimeController.dispose();
-    _endTimeController.dispose();
-    super.dispose();
-  }
 }
 
 class WaveformPainter extends CustomPainter {
@@ -435,7 +445,9 @@ class WaveformPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.blue.shade400..strokeWidth = 2..style = PaintingStyle.fill;
+    // ## MODIFIED ## Changed waveform color to match the theme
+    const themeColor = Color(0xFF2573A6);
+    final paint = Paint()..color = themeColor.withOpacity(0.7)..strokeWidth = 2..style = PaintingStyle.fill;
     final centerY = size.height / 2;
     final barWidth = 2.5;
     final barSpacing = 2.0;
